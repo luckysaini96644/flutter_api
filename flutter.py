@@ -1,16 +1,16 @@
 
-
 from flask import Flask, jsonify, request ,session
 from flask_pymongo import PyMongo
 from bson.json_util import dumps
 from werkzeug.security import generate_password_hash, check_password_hash
-from  time import sleep
+from time import sleep
 
 app = Flask(__name__)
 app.config['MONGO_URI'] = "mongodb://localhost:27017/check"
 mongo = PyMongo(app)
 database = mongo.db.flutter
 app.secret_key = "super secret key"
+
 
 # _from = request.form
 # _name = _from["name"]
@@ -84,20 +84,37 @@ def password():
     _name = request.form["name"]
     _password = request.form["password"]
 
-    data = database.find_one({"name":_name,},{"password":1,"_id":0})
+    data = database.find_one({"name": _name, }, {"password": 1, "_id": 0})
     resp = dumps(data)
-@app.route("/check",methods=["GET","POST"])
+
+
+@app.route("/check", methods=["GET", "POST"])
 def check():
     if request.method == "GET":
-        data = database.find_one({"name": request.form["name"]})
-        resp = dumps(data)
-        return  resp
-    elif request.method == "POST":
-        database.insert_one({"name":request.form["name"]})
-        resp = jsonify("123455")
-        resp.status_code = 200
-        return  resp
+        _form = request.form
+        _name = _form.get('name')
+        _password = _form.get("password")
+        data = database.find({"name": request.form["name"] })
 
+        resp = dumps(data)
+        if _name == request.form["name"] and _password == request.form["password"]:
+            session['user'] = _name
+            print("you password right")
+
+
+
+        return resp
+    elif request.method == "POST":
+        _form = request.form
+        _name = _form.get('name')
+        _password= _form.get("password")
+        if _name == "lucky" and _password == "1234":
+            session["user"] = _name
+            print(_name + _password)
+            resp = jsonify("user login",)
+            return resp
+        else:
+            return  "user password wrong"
 
 
 if __name__ == '__main__':
