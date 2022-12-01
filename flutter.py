@@ -1,5 +1,4 @@
-
-from flask import Flask, jsonify, request ,session
+from flask import Flask, jsonify, request, session
 from flask_pymongo import PyMongo
 from bson.json_util import dumps
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -28,7 +27,7 @@ def create():
     _number = _from["number"]
     _password = _from["password"]
 
-    # hashcode = generate_password_hash(_password)
+    hashcode = generate_password_hash(_password)
     data = database.find_one({"email": _email}, )
     resp = dumps(data)
     print(resp)
@@ -38,7 +37,7 @@ def create():
         # print(decode)
         return "User already exist"
     elif _name and _email and _number and _password and request.method == "POST":
-        database.insert_one({"name": _name, "email": _email, "number": _number, "password": _password})
+        database.insert_one({"name": _name, "email": _email, "number": _number, "password": hashcode})
         resp = jsonify("User create successfully")
         resp.status_code = 200
         # print(_password)
@@ -90,32 +89,21 @@ def password():
 
 @app.route("/check", methods=["GET", "POST"])
 def check():
-    if request.method == "GET":
-        _form = request.form
-        _name = _form.get('name')
-        _password = _form.get("password")
-        data = database.find({"name": request.form["name"] })
-
+    if request.method == "POST":
+        # _name = request.form["name"]
+        _email = request.form["email"]
+        # _number = request.form["number"]
+        _password = request.form["password"]
+        # generate_password_hash(_password)
+        data = database.courses.find_one({ "email": _email,  "password": _password})
+        # pas = data.password
+        # if _password == pas:
+        #     print(pas)
+        session["email"]= _email
         resp = dumps(data)
-        if _name == request.form["name"] and _password == request.form["password"]:
-            session['user'] = _name
-            print("you password right")
-
-
-
-        return resp
-    elif request.method == "POST":
-        _form = request.form
-        _name = _form.get('name')
-        _password= _form.get("password")
-        if _name == "lucky" and _password == "1234":
-            session["user"] = _name
-            print(_name + _password)
-            resp = jsonify("user login",)
-            return resp
-        else:
-            return  "user password wrong"
-
+        # resp.status_code = 200
+        return  resp
+        # return  pas
 
 if __name__ == '__main__':
     app.run(debug=True)
